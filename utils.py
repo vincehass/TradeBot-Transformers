@@ -246,4 +246,4 @@ class TimeseriesDataset():
         self.rt_validate = self.rt.loc[:self.split]
         return self.rt_train  
 
-data_ts = TimeseriesDataset(data)
+# data_ts = TimeseriesDataset(data)

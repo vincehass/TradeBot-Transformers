@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from DecoderModels import RNNDecoder, QuantileDecoder
 from utils import _easy_mlp, _merge_series_time_dims, _split_series_time_dims, NormalizationIdentity, NormalizationStandardization
 from typing import Optional, Dict, Any
 from utils import device
@@ -33,7 +34,7 @@ class TradingBot(nn.Module):
         encoder: Optional[Dict[str, Any]] = None,
         temporal_encoder: Optional[Dict[str, Any]] = None,
         rnn_decoder: Optional[Dict[str, Any]] = None,
-        gaussian_decoder: Optional[Dict[str, Any]] = None,
+        quantile_decoder: Optional[Dict[str, Any]] = None,
         percentile: float = 0.05,
         max_loss: float = -1000.0,
         lookback_window : int = 24,
@@ -83,9 +84,14 @@ class TradingBot(nn.Module):
         self.l_norm = l_norm
         self.percentile = percentile
         self.max_loss = max_loss
-        
         self.lookback_window = lookback_window,
         self.lookahead_window = lookahead_window,
+        self.rnn_decoder  = rnn_decoder
+        self.quantile_decoder  = quantile_decoder
+        assert (rnn_decoder is not None) + (
+            quantile_decoder is not None
+        ) == 1, "Must select exactly one type of decoder"
+        
         
         self.data_normalization = {
             "": NormalizationIdentity,
@@ -96,8 +102,21 @@ class TradingBot(nn.Module):
         self.series_encoder = nn.Embedding(num_embeddings=num_series, embedding_dim=self.series_embedding_dim)
         if rnn_decoder is not None:
             self.decoder = RNNDecoder(input_dim, **rnn_decoder)
-        if gaussian_decoder is not None:
-            self.decoder = GaussianDecoder(input_dim, **gaussian_decoder)
+        
+        if quantile_decoder is not None:
+            self.decoder = QuantileDecoder(input_dim, **quantile_decoder)
+            #Add s sequential layer for the Transformers Model
+            elayers = nn.ModuleList([])
+            for i in range(self.input_encoder_layers):
+                if i == 0:
+                    elayers.append(
+                        nn.Linear(self.series_embedding_dim + 2, self.encoder.embedding_dim)
+                    )  # +1 for the value, +1 for the mask, and the per series embedding
+                else:
+                    elayers.append(nn.Linear(self.encoder.embedding_dim, self.encoder.embedding_dim))
+                elayers.append(nn.ReLU())
+            self.input_encoder = nn.Sequential(*elayers)
+
         
     def loss(
         self, hist_time: torch.Tensor, hist_value: torch.Tensor, pred_time: torch.Tensor, pred_value: torch.Tensor
@@ -168,8 +187,14 @@ class TradingBot(nn.Module):
             dim=3,
         )
 
-        encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
-        #encoded = self.input_encoder(encoded)
+        
+        if self.quantile_decoder is not None:
+            encoded = self.input_encoder(encoded)
+            encoded = self.encoder.forward(encoded)
+        else:
+            encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
+
+
 
         # Add the time encoding here after the input encoding to be compatible with how positional encoding is used.
         # Adjustments may be required for other ways to encode time.
@@ -177,7 +202,7 @@ class TradingBot(nn.Module):
         #     timesteps = torch.cat([hist_time, pred_time], dim=2)
         #     encoded = self.time_encoding(encoded, timesteps.to(int))
 
-        # encoded = self.encoder.forward(encoded)
+        
 
         mask = torch.cat(
             [
@@ -311,7 +336,20 @@ class TradingBot(nn.Module):
             dim=3,
         )
 
-        encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
+        
+        
+        if self.quantile_decoder is not None:
+            encoded = self.input_encoder(encoded)
+            if self.input_encoding_normalization:
+                encoded *= self.encoder.embedding_dim**0.5
+                encoded = self.encoder.forward(encoded)
+        else:
+            encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
+        
+        
+        
+        
+        
         #encoded = self.input_encoder(encoded)
         # if self.input_encoding_normalization:
         #     encoded *= self.encoder.embedding_dim**0.5
@@ -396,161 +434,3 @@ class TradingBot(nn.Module):
 
 
 
-class RNNDecoder(nn.Module):
-    def __init__(self,
-                 dim_features,
-                 dim_hidden_features,
-                 num_layers,
-                 dim_output,
-                 bias = True):
-        super().__init__()
-        self.dim_features = dim_features
-        self.dim_hidden_features = dim_hidden_features
-        self.num_layers = num_layers
-        self.dim_output = dim_output
-        self.bias = bias
-        self.rnn = nn.RNN(
-            input_size=dim_features,
-            hidden_size=dim_hidden_features,     
-            num_layers=num_layers,       
-            batch_first=True,
-            bias = bias   # input & output will has batch size as 1s dimension. e.g. (batch, time_step, dim_features)
-        )
-        self.readout = nn.Linear(dim_hidden_features, dim_output)
-
-        self.relu = nn.ReLU()
-        self.distribution_mu = nn.Linear(dim_hidden_features * num_layers, dim_output)
-        self.distribution_presigma = nn.Linear(dim_hidden_features * num_layers, dim_output)
-        self.distribution_sigma = nn.Softplus()
-
-    def forward(self, in_tensor, in_hidden=None):
-
-        output_tensor, hidden_tensor = self.rnn(in_tensor, in_hidden)
-        output_signal = self.readout(output_tensor)
-        hidden_tensor = hidden_tensor.view(-1, self.dim_hidden_features*self.num_layers)
-        pre_sigma = self.distribution_presigma(hidden_tensor)
-        mu_hidden = self.distribution_mu(hidden_tensor)
-        sigma_hidden = self.distribution_sigma(pre_sigma)  # softplus to make sure standard deviation is positive
-        
-        return output_signal, hidden_tensor, mu_hidden, sigma_hidden
-
-    def loss(self, encoded: torch.Tensor, mask: torch.BoolTensor, true_value: torch.Tensor) -> torch.Tensor:
-        """
-        Compute the loss function of the decoder.
-        Parameters:
-        -----------
-        encoded: Tensor [batch, series, time steps, embedding dimension]
-            A tensor containing an embedding for each variable and time step.
-            This embedding is coming from the encoder, so contains shared information across series and time steps.
-        mask: BoolTensor [batch, series, time steps]
-            A tensor containing a mask indicating whether a given value was available for the encoder.
-            The decoder only forecasts values for which the mask is set to False.
-        true_value: Tensor [batch, series, time steps]
-            A tensor containing the true value for the values to be forecasted.
-            Only the values where the mask is set to False will be considered in the loss function.
-        Returns:
-        --------
-        embedding: torch.Tensor [batch]
-            The loss function, equal to the negative log likelihood of the distribution.
-        """
-        encoded = _merge_series_time_dims(encoded)
-        mask = _merge_series_time_dims(mask)
-        true_value = _merge_series_time_dims(true_value)
-
-        # Assume that the mask is constant inside the batch
-        mask = mask[0, :]
-
-        # Ignore the encoding from the historical variables, if you want tio model no interaction between the variables in this decoder.
-        # pred_encoded = encoded[:, ~mask, :]
-        # pred_true_x = true_value[:, ~mask]
-        
-        #If there is intercation between variables then 
-        hist_encoded = encoded[:, mask, :]
-        pred_encoded = encoded[:, ~mask, :]
-        hist_true_x = true_value[:, mask]
-        pred_true_x = true_value[:, ~mask]
-
-
-
-        # print(' pred_true_x.shape',pred_true_x.shape)
-        out_tensor, hidden_tensor , mu_hidden, sigma_hidden = self.forward(torch.cat([hist_encoded, pred_encoded], axis = 1))
-        # out_tensor, hidden_tensor , mu_hidden, sigma_hidden = self.forward(pred_encoded)
-        # print('pred_encoded.shape',pred_encoded.shape)
-        # print('mu_hidden.shape',mu_hidden.shape)
-        # print('sigma_hidden.shape',sigma_hidden.shape)
-        # print('pred_true_x',pred_true_x.mean())
-        dist_log_prob = torch.distributions.normal.Normal(mu_hidden, sigma_hidden).log_prob(pred_true_x)
-        #pred = dist.sample()  # not scaled
-        #print(pred.shape)
-        self.dist_extractors = _easy_mlp(
-            input_dim=self.dim_features,
-            hidden_dim=self.dim_hidden_features,
-            output_dim=self.dim_output,
-            num_layers=self.num_layers,
-            activation=nn.ReLU,
-        )
-        #ll = self.dist_extractors(pred)
-        #print(ll.shape)
-        # logits = self.dist_extractors(pred)#[:, 1:, :]
-        # logprob = math.log(self.dim_output) + nn.functional.log_softmax(logits, dim=1)
-        return -dist_log_prob
-    
-    def sample(
-        self, num_samples: int, encoded: torch.Tensor, mask: torch.BoolTensor, true_value: torch.Tensor
-    ) -> torch.Tensor:
-        """
-        Generate the given number of samples from the forecasted distribution.
-
-        Parameters:
-        -----------
-        num_samples: int
-            How many samples to generate, must be >= 1.
-        encoded: Tensor [batch, series, time steps, embedding dimension]
-            A tensor containing an embedding for each variable and time step.
-            This embedding is coming from the encoder, so contains shared information across series and time steps.
-        mask: BoolTensor [batch, series, time steps]
-            A tensor containing a mask indicating whether a given value was available for the encoder.
-            The decoder only forecasts values for which the mask is set to False.
-        true_value: Tensor [batch, series, time steps]
-            A tensor containing the true value for the values to be forecasted.
-            The values where the mask is set to True will be copied as-is in the output.
-
-        Returns:
-        --------
-        samples: torch.Tensor [batch, series, time steps, samples]
-            Samples drawn from the forecasted distribution.
-        """
-        num_batches = encoded.shape[0]
-        num_series = encoded.shape[1]
-        num_timesteps = encoded.shape[2]
-        device = encoded.device
-
-        encoded = _merge_series_time_dims(encoded)
-        mask = _merge_series_time_dims(mask)
-        true_value = _merge_series_time_dims(true_value)
-
-        # Assume that the mask is constant inside the batch
-        mask = mask[0, :]
-
-        # Ignore the encoding from the historical variables, since there are no interaction between the variables in this decoder.
-        pred_encoded = encoded[:, ~mask, :]
-        # Except what is needed to copy to the output
-        hist_true_x = true_value[:, mask]
-
-        out_tensor, hidden_tensor , mu_hidden, sigma_hidden = self.forward(pred_encoded)
-        # print(mu_hidden.shape)
-        dist = torch.distributions.normal.Normal(mu_hidden, sigma_hidden)
-        # rsamples have the samples as the first dimension, so send it to the last dimension
-        # print(dist.rsample((num_samples,)).shape)
-        pred_samples = dist.rsample((num_samples,)).permute((1,2, 0))
-        # print('pred_samples.shape',pred_samples.shape)
-        #pred_samples = pred_samples.reshape(num_batches, num_series * num_timesteps, num_samples)
-        #pred_samples = pred_samples[None,:,:]
-        samples = torch.zeros(num_batches, num_series * num_timesteps, num_samples, device=device)
-        # print('pred_samples.shape',pred_samples.shape)
-        samples[:, mask, :] = hist_true_x[:, :, None]
-        # print('samples.shape',samples.shape)
-        samples[:, ~mask, :] = pred_samples
-
-        return _split_series_time_dims(samples, torch.Size((num_batches, num_series, num_timesteps, num_samples)))
-    

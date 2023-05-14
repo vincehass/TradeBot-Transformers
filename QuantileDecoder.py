@@ -17,7 +17,7 @@ class QuantileDecoder(nn.Module):
         skip_sampling_marginal: bool = False,
         trivial_quantile: Optional[Dict[str, Any]] = None,
         attentional_quantile: Optional[Dict[str, Any]] = None,
-        dsf_marginal: Optional[Dict[str, Any]] = None,
+        #dsf_marginal: Optional[Dict[str, Any]] = None,
     ):
         """
         Parameters:
@@ -44,8 +44,8 @@ class QuantileDecoder(nn.Module):
 
         assert (trivial_quantile is not None) + (
             attentional_quantile is not None
-        ) == 1, "Must select exactly one type of copula"
-        assert (dsf_marginal is not None) == 1, "Must select exactly one type of marginal"
+        ) == 1, "Must select exactly one type of decoder"
+        #assert (dsf_marginal is not None) == 1, "Must select exactly one type of marginal"
 
         self.min_u = min_u
         self.max_u = max_u
@@ -56,8 +56,8 @@ class QuantileDecoder(nn.Module):
         if attentional_quantile is not None:
             self.quantile = AttentionalQuantile(input_dim=input_dim, **attentional_quantile)
 
-        if dsf_marginal is not None:
-            self.marginal = DSFMarginal(context_dim=input_dim, **dsf_marginal)
+        # if dsf_marginal is not None:
+        #     self.marginal = DSFMarginal(context_dim=input_dim, **dsf_marginal)
 
     def loss(self, encoded: torch.Tensor, mask: torch.BoolTensor, true_value: torch.Tensor) -> torch.Tensor:
         """
@@ -93,18 +93,18 @@ class QuantileDecoder(nn.Module):
         pred_true_x = true_value[:, ~mask]
 
         # Transform to [0,1] using the marginals
-        hist_true_u = self.marginal.forward_no_logdet(hist_encoded, hist_true_x)
-        pred_true_u, marginal_logdet = self.marginal.forward_logdet(pred_encoded, pred_true_x)
+        # hist_true_u = self.marginal.forward_no_logdet(hist_encoded, hist_true_x)
+        # pred_true_u, marginal_logdet = self.marginal.forward_logdet(pred_encoded, pred_true_x)
 
         quantile_loss = self.quantile.loss(
             hist_encoded=hist_encoded,
-            hist_true_u=hist_true_u,
+            hist_true_u=hist_true_x,#hist_true_u,
             pred_encoded=pred_encoded,
-            pred_true_u=pred_true_u,
+            pred_true_u=pred_true_x#pred_true_u,
         )
 
         # Loss = negative log likelihood
-        return quantile_loss - marginal_logdet
+        return quantile_loss #- marginal_logdet
 
     def sample(
         self, num_samples: int, encoded: torch.Tensor, mask: torch.BoolTensor, true_value: torch.Tensor
@@ -172,7 +172,7 @@ class QuantileDecoder(nn.Module):
 
 class AttentionalQuantile(nn.Module):
     """
-    A non-parametric copula based on attention between the various variables.
+    A non-parametric quantile based on attention between the various variables.
     """
 
     def __init__(
