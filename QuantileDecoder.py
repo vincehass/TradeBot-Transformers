@@ -145,21 +145,23 @@ class QuantileDecoder(nn.Module):
         hist_true_x = true_value[:, mask]
 
         # Transform to [0,1] using the marginals
-        hist_true_u = self.marginal.forward_no_logdet(hist_encoded, hist_true_x)
+        #hist_true_u = self.marginal.forward_no_logdet(hist_encoded, hist_true_x)
+        hist_true_u = hist_true_x
 
-        pred_samples = self.copula.sample(
+
+        pred_samples = self.quantile.sample(
             num_samples=num_samples,
             hist_encoded=hist_encoded,
             hist_true_u=hist_true_u,
             pred_encoded=pred_encoded,
         )
-        if not self.skip_sampling_marginal:
-            # Transform away from [0,1] using the marginals
-            pred_samples = self.min_u + (self.max_u - self.min_u) * pred_samples
-            pred_samples = self.marginal.inverse(
-                pred_encoded,
-                pred_samples,
-            )
+        # if not self.skip_sampling_marginal:
+        #     # Transform away from [0,1] using the marginals
+        #     pred_samples = self.min_u + (self.max_u - self.min_u) * pred_samples
+        #     pred_samples = self.marginal.inverse(
+        #         pred_encoded,
+        #         pred_samples,
+        #     )
 
         samples = torch.zeros(
             target_shape[0], target_shape[1] * target_shape[2], target_shape[3], device=encoded.device
