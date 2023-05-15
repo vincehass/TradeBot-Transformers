@@ -20,7 +20,9 @@ $$M = L + S,$$
 
 where $L$ is a rank $k$ ($k<\min(n,m)$) matrix and $S$ is some perturbation/noise matrix. To obtain $L$, PCA solves the following optimization problem
 
-$$\min_{L} ||M-L||_2,$$
+$\min{\|L\|_* + \lambda |S|_1}$ 
+
+subject to $L+S = M$.
 
 given that rank($L$) <= $k$. However, the effectiveness of PCA relies on the assumption of the noise matrix $S$: $s_{i,j}$ is small and i.i.d. Gaussian. This assumption makes the PCA not robust to outliers in the data Matrix M.
 
@@ -28,15 +30,11 @@ To resolve this issue, Candes, Emmanuel J. et al proposed _Robust Principal Comp
 
 ### The Optimization problem
 The objective is to decompose $M$ in to :
+
 1- A low-rank matrix $L$
+
 2- A sparse matrix $S$
  
-Then we have an optimization problem that looks as the following
-
-$$\min_{L,S} ||L||_{*} + \lambda||S||_{1}$$ 
-
-subject to $L+S = M$.
-
 
 ## The Application of Robust PCA to Electricity prices
 
@@ -46,13 +44,10 @@ Forming the price data from one commerical trading hub into a matrix $M$ with ea
 
 $M$ = $L + S$
 
-Since we can only measure the market prices $M$, we wish estimate $L$ and $S$ by solving the Robust PCA problem:
-
-$\min{\|L\|_* + \lambda |S|_1}$
-
-subject to $L + S = M$ 
+Since we can only measure the market prices $M$, we wish estimate $L$ and $S$ by solving the Robust PCA problem stated above.
 
 Minimizing the $l_1$-norm of Spike prices $S$ is known to favour sparsity while minimizing the nuclear norm of Electricity prices $L$ is known to favour low-rank matrices (sparsity of singular values). Therefore, we have two observation to make:
+
 1- $M$ is decomposed to a low-rank matrix but not sparse $L$ and ;
 2- $S$ is a sparse but not low rank matrix. 
 
