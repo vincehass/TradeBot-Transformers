@@ -41,7 +41,7 @@ The objective is to decompose $M$ in to :
 Electricity prices tend to vary smoothly in response to supply and demand signals, but are subject to intermittent price spikes that deviate substantially from normal behaviour as shown below
 
 
-![plot](/Users/nhassen/Documents/ProjectQuant/MyRepos/TradeBot-Transformers/electricity.png)
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/electricity.png)
 
 Forming the price data from one commerical trading hub into a matrix $M$ with each day as a row and each hour as a column, we can consider $M$ as the combination of a low-rank matrix $L$ consisting of the normal daily market behaviour, and a sparse matrix $S$ consisting of the intermittent price spikes.
 
