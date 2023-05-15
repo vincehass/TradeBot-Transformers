@@ -20,7 +20,7 @@ $$M = L + S,$$
 
 where $L$ is a rank $k$ ($k<\min(n,m)$) matrix and $S$ is some perturbation/noise matrix. To obtain $L$, PCA solves the following optimization problem
 
-$\min{\|L\|_* + \lambda |S|_1}$ 
+$$\min{\|L\|_* + \lambda |S|_1},$$ 
 
 subject to $L+S = M$.
 
@@ -38,7 +38,9 @@ The objective is to decompose $M$ in to :
 
 ## The Application of Robust PCA to Electricity prices
 
-Electricity prices tend to vary smoothly in response to supply and demand signals, but are subject to intermittent price spikes that deviate substantially from normal behaviour.
+Electricity prices tend to vary smoothly in response to supply and demand signals, but are subject to intermittent price spikes that deviate substantially from normal behaviour as shown below
+
+![alt text](https://github.com/[vincehass]/[reponame]/blob/[main]/electricity.png?raw=true)
 
 Forming the price data from one commerical trading hub into a matrix $M$ with each day as a row and each hour as a column, we can consider $M$ as the combination of a low-rank matrix $L$ consisting of the normal daily market behaviour, and a sparse matrix $S$ consisting of the intermittent price spikes.
 
@@ -49,6 +51,7 @@ Since we can only measure the market prices $M$, we wish estimate $L$ and $S$ by
 Minimizing the $l_1$-norm of Spike prices $S$ is known to favour sparsity while minimizing the nuclear norm of Electricity prices $L$ is known to favour low-rank matrices (sparsity of singular values). Therefore, we have two observation to make:
 
 1- $M$ is decomposed to a low-rank matrix but not sparse $L$ and ;
+
 2- $S$ is a sparse but not low rank matrix. 
 
 Here $S$ can be viewed as a sparse noise matrix which accounts the intermittent fluctuation in the market. 
