@@ -5,10 +5,13 @@ TradeBot algorithm for sequential prediction based on Transformers and LSTM Mode
 
 # Robust Principle Component Analysis
 
-Implementation of robust principal component analysis and stable principal component pursuit based on the following references:
+Implementation of robust principal component analysis pursuit based on Algorithm 1 (Principal Component Pursuit by Alternating Directions) described on page 29 in this paper:
 
 * Candes, Emmanuel J. et al. "Robust Principal Component Analysis?" Journal of the ACM, Vol. 58, No. 3, Article 11, 2011.
-* Zhou, Zihan, et al. "Stable principal component pursuit." Information Theory Proceedings (ISIT), 2010 IEEE International Symposium on. IEEE, 2010.
+
+You can have acces here https://arxiv.org/abs/0912.3599
+
+
 
 ### Description
 The classical _Principal Component Analysis_ (PCA) is widely used for high-dimensional analysis and dimensionality reduction. Mathematically, if all the data points are stacked as column vectors of a (n, m)matrix $M$, PCA tries to decompose $M$ as
@@ -19,52 +22,69 @@ where $L$ is a rank $k$ ($k<\min(n,m)$) matrix and $S$ is some perturbation/nois
 
 $$\min_{L} ||M-L||_2,$$
 
-given that rank($L$) <= $k$. However, the effectiveness of PCA relies on the assumption of the noise matrix $S$: $s_{i,j}$ is small and i.i.d. Gaussian. That means PCA is not robust to outliers in data $M$.
+given that rank($L$) <= $k$. However, the effectiveness of PCA relies on the assumption of the noise matrix $S$: $s_{i,j}$ is small and i.i.d. Gaussian. This assumption makes the PCA not robust to outliers in the data Matrix M.
 
-To resolve this issue, Candes, Emmanuel J. et al proposed _Robust Principal Component Analysis_ (Robust PCA or RPCA). The objective is still trying to decompose $M$ into $L$ and $S$, but instead optimizing the following problem
+To resolve this issue, Candes, Emmanuel J. et al proposed _Robust Principal Component Analysis_ (Robust PCA or RPCA). 
 
-$$ \min_{L,S} ||L||_{*} + \lambda||S||_{1}$$
+#### The Optimization problem
+The objective is to decompose $M$ in to :
+1- A low-rank matrix $L$
+2- A sparse matrix $S$
+ 
+Then we have an optimization problem that looks as the following
+
+$$\min_{L,S} ||L||_{*} + \lambda||S||_{1}$$ 
 
 subject to $L+S = M$.
 
-Minimizing the $l_1$-norm of $S$ is known to favour sparsity while minimizing the
-nuclear norm of $L$ is known to favour low-rank matrices (sparsity of singular values). In this way, $M$ is decomposed to a low-rank matrix but not sparse $L$ and a sparse but not low rank $S$. Here $S$ can be viewed as a sparse noise matrix. Robust PCA allows the separation of sparse but outlying values from the original data.  
 
-Also, Zhou et al. further proposed a "stable" version of Robust PCA, which is called _Stable Principal Component Pursuit_ (Stable PCP or SPCP), which allows a non-sparse Gaussian noise term $Z$ in addition to $L$ and $S$:
+#### The Application of Robust PCA to Electricity prices
 
-$$M = L+S+Z.$$
+Electricity prices tend to vary smoothly in response to supply and demand signals, but are subject to intermittent price spikes that deviate substantially from normal behaviour.
 
-Stable PCP is intuitively more practical since it combines the strength of classical PCA and Robust PCA. However, depending on the exact problem, the proper method should be selected.
+Forming the price data from one commerical trading hub into a matrix $M$ with each day as a row and each hour as a column, we can consider $M$ as the combination of a low-rank matrix $L$ consisting of the normal daily market behaviour, and a sparse matrix $S$ consisting of the intermittent price spikes.
 
-The drawback of Robust PCA and Stable PCP is their scalability. They are generally slow since the implementation do SVD (singular value decomposition) in the converging iterations. Recently, a new algorithm was proposed: "[Grassmann Averages](https://ieeexplore.ieee.org/document/6909882)" for Scalable Robust PCA.
+$M$ = $L + S$
+
+Since we can only measure the market prices $M$, we wish estimate $L$ and $S$ by solving the Robust PCA problem:
+
+$\min{\|L\|_* + \lambda |S|_1}$
+
+subject to $L + S = M$ 
+
+Minimizing the $l_1$-norm of Spike prices $S$ is known to favour sparsity while minimizing the nuclear norm of Electricity prices $L$ is known to favour low-rank matrices (sparsity of singular values). Therefore, we have two observation to make:
+1- $M$ is decomposed to a low-rank matrix but not sparse $L$ and ;
+2- $S$ is a sparse but not low rank matrix. 
+
+Here $S$ can be viewed as a sparse noise matrix which accounts the intermittent fluctuation in the market. 
+
+The Robust PCA algorithm allows the separation of sparse but outlying values from the original data.  
 
 
-### Examples
 
-To install the package:
-```
-pip install git+https://github.com/ShunChi100/RobustPCA
-```
+The drawback of Robust PCA algorithm is its scalability, because it is generally slow since the implementation do SVD (singular value decomposition) in the converging iterations. 
+We can alternatively look at Stable PCP which is intuitively more practical since it combines the strength of classical PCA and Robust PCA. However, we should be careful on the context of the problem and the data provided.
 
-To use
+
+
+### To use the Robust PCA algorithm
+
+
 ```
 from RobustPCA.rpca import RobustPCA
-from RobustPCA.spcp import StablePCP
 
 rpca = RobustPCA()
-spcp = StablePCP()
+<!-- spcp = StablePCP() -->
 
 rpca.fit(M)
 L = rpca.get_low_rank()
 S = rpca.get_sparse()
 
-spcp.fit(M)
+<!-- spcp.fit(M)
 L = spcp.get_low_rank()
-S = spcp.get_sparse()
+S = spcp.get_sparse() -->
 ```
 Here `L` and `S` are desired low rank matrix and sparse matrix.
-
-For more options of these functions, please see the documentation and source codes.
 
 ### Contributions
 Feel free to fork and develop this project. It is under MIT license.
