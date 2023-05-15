@@ -13,7 +13,7 @@ You can have acces here https://arxiv.org/abs/0912.3599
 
 
 
-### Description
+## Description
 The classical _Principal Component Analysis_ (PCA) is widely used for high-dimensional analysis and dimensionality reduction. Mathematically, if all the data points are stacked as column vectors of a (n, m)matrix $M$, PCA tries to decompose $M$ as
 
 $$M = L + S,$$
@@ -26,7 +26,7 @@ given that rank($L$) <= $k$. However, the effectiveness of PCA relies on the ass
 
 To resolve this issue, Candes, Emmanuel J. et al proposed _Robust Principal Component Analysis_ (Robust PCA or RPCA). 
 
-#### The Optimization problem
+### The Optimization problem
 The objective is to decompose $M$ in to :
 1- A low-rank matrix $L$
 2- A sparse matrix $S$
@@ -38,7 +38,7 @@ $$\min_{L,S} ||L||_{*} + \lambda||S||_{1}$$
 subject to $L+S = M$.
 
 
-#### The Application of Robust PCA to Electricity prices
+## The Application of Robust PCA to Electricity prices
 
 Electricity prices tend to vary smoothly in response to supply and demand signals, but are subject to intermittent price spikes that deviate substantially from normal behaviour.
 
