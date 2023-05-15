@@ -1,13 +1,17 @@
-# Authors: Shun Chi (shunchi100@gmail.com)
+# based on the fbpca package source code
 
 import numpy as np
-try:
-    from fbpca import pca
-except ModuleNotFoundError:
-    print('\n install fbpca first: `pip install fbpca` \n')
+from fbpca import pca
+
 
 class RobustPCA:
     """Robust principal component analysis (Robust PCA)
+
+
+    The main function in this class rely on the implementation of the package accesible here:
+    
+    https://github.com/facebookarchive/fbpca
+
 
     Dimensionality reduction using alternating directions methods
     to decompose the input 2D matrix M into a lower rank dense 2D matrix L and sparse
@@ -16,17 +20,11 @@ class RobustPCA:
     Parametersfbpca.pca
     ----------
     lamb : positive float
-        Sparse component coefficient.
-        if user doesn't set it:
-            lamb = 1/sqrt(max(M.shape))
-        A effective default value from the reference.
-
+        Sparse component parameter. Default: lamb = 1/sqrt(max(M.shape))
+        
     mu : positive float
-        Coefficient for augmented lagrange multiplier
-        if user doesn't set it:
-            n1, n2 = M.shape
-            mu = n1*n2/4/norm1(M) # norm1(M) is M's l1-norm
-        A effective default value from the reference.
+        Coefficient for augmented lagrange multiplier. Default: mu = n1*n2/4/norm1(M) # norm1(M) is M's l1-norm
+        with n1, n2 = M.shape
 
     max_rank : positive int
         The maximum rank allowed in the low rank matrix
@@ -47,23 +45,16 @@ class RobustPCA:
         If max_rank is not given, this sets the rank for fbpca.pca()
         fbpca_rank = int(fbpca_rank_ratio * min(M.shape))
 
-    Attributes:
+    Returns:
     -----------
-    L : 2D array
+    L : A-2 dimensional np.array 
             Lower rank dense 2D matrix
 
-    S : 2D array
+    S : A-dimensional np.array
         Sparse but not low-rank 2D matrix
 
     converged : bool
-        Flag shows if the fit is converged or not
-
-
-    Reference:
-    ----------
-    `Emmanuel J. Candes, Xiaodong Li, Yi Ma, and John Wright`
-    "Robust Principal Component Analysis?"
-    https://statweb.stanford.edu/~candes/papers/RobustPCA.pdf
+        prints if the convergence has been achieved
 
     """
 
@@ -80,7 +71,7 @@ class RobustPCA:
 
     def s_tau(self, X, tau):
         """Shrinkage operator
-            Sτ [x] = sign(x) max(|x| − τ, 0)
+            Sτ [x] = sign(x) max(|x|, τ, 0)
 
         Parameters
         ----------
@@ -100,7 +91,7 @@ class RobustPCA:
 
     def d_tau(self, X):
         """Singular value thresholding operator
-            Dτ (X) = USτ(Σ)V∗, where X = UΣV∗
+            Dτ (X) = USτ(Σ)V_{*}, where X = UΣV_{*}
 
         Parameters
         ----------
@@ -136,19 +127,17 @@ class RobustPCA:
 
 
 
-    def fit(self, M):
+    def train_pca(self, M):
         """Robust PCA fit
 
         Parameters
         ----------
-        M : 2D array
-            2D array for docomposing
-
+        M : 2D array (for decomposition)
+            
         Returns
         -------
         L : 2D array
             Lower rank dense 2D matrix
-
         S : 2D array
             Sparse but not low-rank 2D matrix
         """
@@ -159,7 +148,7 @@ class RobustPCA:
         S = np.zeros(size)
         Y = np.zeros(size)
 
-        # if lamb and mu are not set, set with default values
+        # In the case where lambda and my are not defined by the user, we set them to
         if self.mu==None:
             self.mu = np.prod(size)/4.0/np.sum(np.abs(M))
         if self.lamb==None:
@@ -181,7 +170,7 @@ class RobustPCA:
 
             Y = Y + self.mu*residuals
 
-        # Check if the fit is converged
+        # Check if the PCA result fit have converged under the constraint tol
         if residuals_sum > self.tol:
             print('Not converged!')
             print('Total error: %f, allowed tolerance: %f'%(residuals_sum, self.tol))
@@ -192,7 +181,7 @@ class RobustPCA:
 
         self.L, self.S, self.rank = L, S, rank
 
-    def get_low_rank(self):
+    def get_low_rank_matrix_L(self):
         '''Return the low rank matrix
 
         Returns:
@@ -202,7 +191,7 @@ class RobustPCA:
         '''
         return self.L
 
-    def get_sparse(self):
+    def get_sparse_matrix_S(self):
         '''Return the sparse matrix
 
         Returns:
@@ -212,7 +201,7 @@ class RobustPCA:
         '''
         return self.S
 
-    def get_rank(self):
+    def get_rank_low_rank_matrix(self):
         '''Return the rank of low rank matrix
 
         Returns:
