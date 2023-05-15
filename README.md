@@ -57,7 +57,9 @@ Minimizing the $l_1$-norm of Spike prices $S$ is known to favour sparsity while 
 
 Here $S$ can be viewed as a sparse noise matrix which accounts the intermittent fluctuation in the market. 
 
-The Robust PCA algorithm allows the separation of sparse but outlying values from the original data.  
+The Robust PCA algorithm allows the separation of sparse but outlying values from the original data as shown below
+
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/results_electricity.png)
 
 
 
