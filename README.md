@@ -70,22 +70,28 @@ We can alternatively look at Stable PCP which is intuitively more practical sinc
 
 ### To use the Robust PCA algorithm
 
+Unroll the daily values to plot the timeseries. Note the spikes we wish to separate.
+
 
 ```
-from RobustPCA.rpca import RobustPCA
+data = pd.read_csv("Question1.csv", index_col=0, parse_dates=True)
 
-rpca = RobustPCA()
-<!-- spcp = StablePCP() -->
+timeseries = data.stack()
+timeseries.index = timeseries.index.droplevel(1)
+timeseries.plot()
 
-rpca.fit(M)
-L = rpca.get_low_rank()
-S = rpca.get_sparse()
+M = data.values
 
-<!-- spcp.fit(M)
-L = spcp.get_low_rank()
-S = spcp.get_sparse() -->
+rpca = RobustPCA(max_iter=10000)
+
+rpca.train_pca(M)
+
+L = rpca.get_low_rank_matrix_L()
+S = rpca.get_sparse_matrix_S()
+
+
 ```
-Here `L` and `S` are desired low rank matrix and sparse matrix.
+Here `L` and `S` are desired low rank matrix and sparse matrix that contains the spike prices.
 
 ### Contributions
 Feel free to fork and develop this project. It is under MIT license.
