@@ -84,7 +84,9 @@ See our `getting started tutorial <https://www.zipline.io/beginner-tutorial>`_.
 
 The following code implements a simple dual moving average algorithm.
 
-.. code:: python
+.. code-block:: python
+   :linenos:
+   :emphasize-lines: 3,5-6
 
     def maximize_trade_constrain_downside(self,bid_price, offer_price, da_validate, rt_validate, percentile, max_loss, gamma):
 
