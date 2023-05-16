@@ -88,30 +88,30 @@ The following code implements a simple dual moving average algorithm.
    :linenos:
    :emphasize-lines: 3,5-6
 
-    def maximize_trade_constrain_downside(self,bid_price, offer_price, da_validate, rt_validate, percentile, max_loss, gamma):
+def maximize_trade_constrain_downside(self,bid_price, offer_price, da_validate, rt_validate, percentile, max_loss, gamma):
 
-        bid_return = (da_validate <= bid_price) * (rt_validate - da_validate)
-        offer_return = (offer_price < da_validate) * (da_validate - rt_validate)                                                  
-        
-        weights1 = cp.Variable(bid_return.mean(axis=0).shape)
-        weights2 = cp.Variable(offer_return.mean(axis=0).shape)
-        
-        objective = cp.Maximize(weights1* bid_return.mean(axis=0)+ weights2* offer_return.mean(axis=0))
-        
-        
+    bid_return = (da_validate <= bid_price) * (rt_validate - da_validate)
+    offer_return = (offer_price < da_validate) * (da_validate - rt_validate)                                                  
+    
+    weights1 = cp.Variable(bid_return.mean(axis=0).shape)
+    weights2 = cp.Variable(offer_return.mean(axis=0).shape)
+    
+    objective = cp.Maximize(weights1* bid_return.mean(axis=0)+ weights2* offer_return.mean(axis=0))
+    
+    
 
-        nsamples = round(bid_return.shape[0]*self.percentile)
+    nsamples = round(bid_return.shape[0]*self.percentile)
+    
+    portfolio_rets = weights1*bid_return.T + weights2*offer_return.T
+    wors_hour = cp.sum_smallest(portfolio_rets, nsamples)/nsamples
         
-        portfolio_rets = weights1*bid_return.T + weights2*offer_return.T
-        wors_hour = cp.sum_smallest(portfolio_rets, nsamples)/nsamples
-          
-        constraints = [wors_hour>=max_loss, weights1>=0, weights2>=0, cp.norm(weights2, self.l_norm) <= self.gamma,
-                                                                        cp.norm(weights1, self.l_norm) <= self.gamma]
-        
-        problem = cp.Problem(objective, constraints)
-        problem.solve()
+    constraints = [wors_hour>=max_loss, weights1>=0, weights2>=0, cp.norm(weights2, self.l_norm) <= self.gamma,
+                                                                    cp.norm(weights1, self.l_norm) <= self.gamma]
+    
+    problem = cp.Problem(objective, constraints)
+    problem.solve()
 
-        return weights1.value.round(4).ravel(), bid_return, weights2.value.round(4).ravel(), offer_return, problem.value
+    return weights1.value.round(4).ravel(), bid_return, weights2.value.round(4).ravel(), offer_return, problem.value
 
 
 
