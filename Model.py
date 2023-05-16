@@ -201,9 +201,13 @@ class TradingBot(nn.Module):
         )
 
         encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
-        encoded = self.input_encoder(encoded)
-        if self.input_encoding_normalization:
-            encoded = encoded * self.encoder.embedding_dim**0.5
+        if self.quantile_decoder is not None:
+            encoded = self.input_encoder(encoded)
+            if self.input_encoding_normalization:
+                encoded = encoded * self.encoder.embedding_dim**0.5
+            encoded = self.encoder.forward(encoded)
+        # if self.input_encoding_normalization:
+        #     encoded = encoded * self.encoder.embedding_dim**0.5
 
         # Add the time encoding here after the input encoding to be compatible with how positional encoding is used.
         # Adjustments may be required for other ways to encode time.
@@ -211,7 +215,7 @@ class TradingBot(nn.Module):
         #     timesteps = torch.cat([hist_time, pred_time], dim=2)
         #     encoded = self.time_encoding(encoded, timesteps.to(int))
 
-        encoded = self.encoder.forward(encoded)
+        
 
         mask = torch.cat(
             [
@@ -393,13 +397,18 @@ class TradingBot(nn.Module):
         #     encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
         
         
-        
-        
-        
         encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
-        encoded = self.input_encoder(encoded)
-        if self.input_encoding_normalization:
-            encoded *= self.encoder.embedding_dim**0.5
+        if self.quantile_decoder is not None:
+            encoded = self.input_encoder(encoded)
+            if self.input_encoding_normalization:
+                encoded = encoded * self.encoder.embedding_dim**0.5
+            encoded = self.encoder.forward(encoded)
+        
+        
+        # encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
+        # encoded = self.input_encoder(encoded)
+        # if self.input_encoding_normalization:
+        #     encoded *= self.encoder.embedding_dim**0.5
 
         # Add the time encoding here after the input encoding to be compatible with how positional encoding is used.
         # Adjustments may be required for other ways to encode time.
@@ -407,7 +416,7 @@ class TradingBot(nn.Module):
         #     timesteps = torch.cat([hist_time, pred_time], dim=2)
         #     encoded = self.time_encoding(encoded, timesteps.to(int))
 
-        encoded = self.encoder.forward(encoded)
+        #encoded = self.encoder.forward(encoded)
 
         mask = torch.cat(
             [

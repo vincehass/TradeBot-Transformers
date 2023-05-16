@@ -1,5 +1,6 @@
 # TradeBot-Transformers
 TradeBot algorithm for sequential prediction based on Transformers and RNN Model, the main objectif of the model is to optimize portfolio allocation given uncertainity in the energy market.
+See https://arxiv.org/pdf/2303.08565.pdf
 
 
 
