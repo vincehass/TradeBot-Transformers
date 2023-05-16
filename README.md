@@ -84,16 +84,11 @@ See our `getting started tutorial <https://www.zipline.io/beginner-tutorial>`_.
 
 The following code implements a simple dual moving average algorithm.
 
-   .. code-block:: python
-   :linenos:
-   :emphasize-lines: 3,5-6
+.. function:: foo(x)
+              foo(y, z)
+   :bar: no
 
-   def some_function():
-       interesting = False
-       print 'This line is highlighted.'
-       print 'This one is not...'
-       print '...but this one is.'
-       print 'This one is highlighted too.'
+   Return a line of text input from the user.
 
     def maximize_trade_constrain_downside(self,bid_price, offer_price, da_validate, rt_validate, percentile, max_loss, gamma):
 
