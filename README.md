@@ -5,7 +5,6 @@ See https://arxiv.org/pdf/2303.08565.pdf
 
 
 ## Background
-=============
 
 For the A2 task, our goal is first:
 
@@ -24,7 +23,7 @@ Algorithmic trading strategies are driven by signals that indicate when to buy o
 a benchmark such as an index. The portion of an asset's return that is not explained by exposure to this benchmark is called alpha, 
 and hence the signals that aim to produce such uncorrelated returns are also called alpha factors.
 
-### Recurrent Neural network (RNN)
+## Recurrent Neural network (RNN)
 
 We first adopt an RNN model that predicts a day-ahead energy prices known as ``da``, in fact the trader is faced upon two information:
 
@@ -39,7 +38,7 @@ In the first naive model, we consider an RNN, the major innovation of RNN is tha
 RNNs have been successfully applied to various tasks that require mapping one or more input sequences to one or more output sequences and are particularly well suited to time series forecasting. 
 
 
-### Transformers:
+## Transformers:
 
 
 
@@ -48,7 +47,7 @@ RNNs have been successfully applied to various tasks that require mapping one or
 
 
 
-### The Optimization Problem:
+## The Optimization Problem:
 
 
 We consider the energy market over a short time period e.g 24hours and we want to predict the next 24 hours. We assumpe we have some amount of money to invest in any of $n$ different node energy market for every hour $i$. 
@@ -62,11 +61,11 @@ We say that there is an arbitrage opportunity in this event if there exists a be
 
 Our optimization problem is the following:
 
-  $\max{\sum_{i}^\infty} hourly\_result(\textbf{v}_i^l, \textbf{p}_i^l, \textbf{v}_i^s, p_i^s,da_i, rt_i)$, 
+  $$\max{\sum_{i}^\infty} hourly\_result(\textbf{v}_i^l, \textbf{p}_i^l, \textbf{v}_i^s, p_i^s,da_i, rt_i)$$, 
 
 subject to
 
-$\min(hourly\_result(\textbf{v}_i^l, p_i^l, v_i^s, p_i^s,da_i, rt_i)\geq -1000$ for all $i$
+$\min(hr(\textbf{v}_i^l, p_i^l, v_i^s, p_i^s,da_i, rt_i))\geq -1000$ for all $i$
 
 where $\textbf{p}^l, \textbf{v}^l, \textbf{p}^s, \textbf{v}^s=f(\textbf{x})$,
 
@@ -78,8 +77,6 @@ $v_{ij}^\leq 0,v_{ij}^s>=0, p_{ij}^l  \geq p_{ij}^s$  for all $i,j$
 Conditional Value at Risk (CVaR) is a popular risk measure among professional investors used to quantify the extent of potential big losses. The metric is computed as an average of the  $\alpha\%$ worst case scenarios over some time horizon. 
 
 We want to place our order/trades in a conservative way, focusing on the less profitable outcomes. For high values of $\alpha$ it ignores the most profitable but unlikely possibilities, while for small values of $\alpha$ it focuses on the worst losses. In our startegy we consider $\alpha = 5\%$.
-
-
 
 
 
