@@ -462,13 +462,8 @@ class TradingBot(nn.Module):
         bid_return = (da_validate <= bid_price) * (rt_validate - da_validate)
         offer_return = (offer_price < da_validate) * (da_validate - rt_validate)                                                  
         
-
         weights1 = cp.Variable(bid_return.mean(axis=0).shape)
         weights2 = cp.Variable(offer_return.mean(axis=0).shape)
-        # print('bid_return.shape',bid_return.shape)
-        # print('weights1.shape',weights1.shape)
-        # print('offer_return.shape',offer_return.shape)
-        # print('weights2.shape',weights2.shape)
         
         objective = cp.Maximize(weights1* bid_return.mean(axis=0)+ weights2* offer_return.mean(axis=0))
         
@@ -478,8 +473,7 @@ class TradingBot(nn.Module):
         
         portfolio_rets = weights1*bid_return.T + weights2*offer_return.T
         wors_hour = cp.sum_smallest(portfolio_rets, nsamples)/nsamples
-        
-        
+          
         constraints = [wors_hour>=max_loss, weights1>=0, weights2>=0, cp.norm(weights2, self.l_norm) <= self.gamma,
                                                                         cp.norm(weights1, self.l_norm) <= self.gamma]
         
