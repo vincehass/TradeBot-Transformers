@@ -32,6 +32,10 @@ Our methodology is based on the following articles:
 
 [Multi-Period Trading via Convex Optimization](https://stanford.edu/~boyd/papers/pdf/cvx_portfolio.pdf)
 
+[cVaR](https://bjerring.github.io/equity/2019/11/04/Portfolio-Optimization-using-CVaR.html)
+
+[Expected shortfall](https://en.wikipedia.org/wiki/Expected_shortfall)
+
 ## Background
 
 For this task, our goal is:
@@ -102,15 +106,15 @@ We say that there is an arbitrage opportunity in this event if there exists a be
 
 Our optimization problem is the following:
 
-  $$\max{\sum_{i}^\infty} hourly\_result(\textbf{v}_i^l, \textbf{p}_i^l, \textbf{v}_i^s, p_i^s,da_i, rt_i)$$, 
+  $$\max{\sum_{i}^\infty} hr(\textbf{v}_i^l, \textbf{p}_i^l, \textbf{v}_i^s, p_i^s,da_i, rt_i),$$ 
 
 subject to
 
 $\min(hr(\textbf{v}_i^l, p_i^l, v_i^s, p_i^s,da_i, rt_i))\geq -1000$ for all $i$
 
-where $\textbf{p}^l, \textbf{v}^l, \textbf{p}^s, \textbf{v}^s=f(\textbf{x})$,
+where $\textbf{p}^l, \textbf{v}^l, \textbf{p}^s, \textbf{v}^s=f(\textbf{x})$
 
-$v_{ij} \geq 0, v_{ij} \geq 0, p_{ij}  \geq p_{ij}^s$  for all $i,j$
+$v_{ij} \geq 0, v_{ij} \geq 0, p_{ij}^l  \geq p_{ij}^s$  for all $i,j$
 
   
 ## The Startegy : Expected shortfall /CVaR
@@ -176,19 +180,14 @@ We can display the trade combination, for both models the portfolio is well dive
 ## Limitation of the method
 
 
-- We should probably add (or just keep the default) 'slippage' model for limit orders. Slippage not only refers to the calculation of a realistic price but also a realistic volume
+- We should probably add a 'slippage' model for limit orders. Slippage not only refers to the calculation of a realistic price but also a realistic volume
 
-- The slippage method also evaluates if your order is simply too big: you can't trade more than market's volume, and generally you can't expect to trade more than a fraction of the volume. 
+- The slippage method also evaluates if our order is simply too big: because we can't trade more than market's volume.
+
+- We limit ourself to market price conditions but we could have used feature data such as climate conditions.
 
 
-
-
-
-References:
-
-[cVaR](https://bjerring.github.io/equity/2019/11/04/Portfolio-Optimization-using-CVaR.html)
-[Expected shortfall](https://en.wikipedia.org/wiki/Expected_shortfall)
-
+===================================================================
 
 
 
