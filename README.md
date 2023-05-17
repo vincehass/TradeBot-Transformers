@@ -5,24 +5,32 @@ First clone this repository to your computer.
 
 To Ensure your research is reproducible. If you don't already have it, download a conda distribution from:
 https://conda.io/docs/user-guide/install/index.html.
+
 Create a virtual environment by running:
+
+```bash
 conda create -n env_TradeBot python=3.9
-source activate env-TradeBot
+source activate env_TradeBot
 pip install -r requirements.txt
+```
 
 
 
-
-# TradeBot
+# Trading on Energy market with a convex optimization problem 
 
 We construct a TradeBot algorithm for sequential prediction based on Transformers and RNN Model, the main objectif of the model is to optimize portfolio allocation given uncertainity in the energy market.
 
 Our methodology is based on the following articles:
 
-https://arxiv.org/pdf/2303.08565.pdf
+[Probabilistic forecasting with Factor Quantile Regression: Application to electricity trading](https://arxiv.org/pdf/2303.08565.pdf)
 
+[Autoformer: Decomposition Transformers with Auto-Correlation for Long-Term Series Forecasting](https://arxiv.org/pdf/2106.13008.pdf)
 
+[Foundations of Sequence-to-Sequence Modeling for Time Series](https://arxiv.org/pdf/1805.03714.pdf)
 
+[Are Transformers Effective for Time Series Forecasting?](https://arxiv.org/pdf/2205.13504.pdf)
+
+[Multi-Period Trading via Convex Optimization](https://stanford.edu/~boyd/papers/pdf/cvx_portfolio.pdf)
 
 ## Background
 
@@ -78,9 +86,7 @@ Secondly, a Transformer helps us to train on time series data which might contai
 In the diagram below we show how the procedure works
 
 
-
-
-
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/architecture.png)
 
 
 
