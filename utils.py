@@ -182,7 +182,8 @@ def worst_loss(results):
     
     return min(results.sum(axis=1))
 
-
+def best_loss(results):
+    return max(results.sum(axis=1))
 
 
 class TimeseriesDataset():

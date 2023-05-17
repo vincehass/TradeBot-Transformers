@@ -1,12 +1,32 @@
-# TradeBot-Transformers
-TradeBot algorithm for sequential prediction based on Transformers and RNN Model, the main objectif of the model is to optimize portfolio allocation given uncertainity in the energy market.
-See https://arxiv.org/pdf/2303.08565.pdf
+
+# Quick Start
+
+First clone this repository to your computer.
+
+To Ensure your research is reproducible. If you don't already have it, download a conda distribution from:
+https://conda.io/docs/user-guide/install/index.html.
+Create a virtual environment by running:
+conda create -n env_TradeBot python=3.9
+source activate env-TradeBot
+pip install -r requirements.txt
+
+
+
+
+# TradeBot
+
+We construct a TradeBot algorithm for sequential prediction based on Transformers and RNN Model, the main objectif of the model is to optimize portfolio allocation given uncertainity in the energy market.
+
+Our methodology is based on the following articles:
+
+https://arxiv.org/pdf/2303.08565.pdf
+
 
 
 
 ## Background
 
-For the A2 task, our goal is first:
+For this task, our goal is:
 
 1- Develop an algorithm that synthetizes a signal of energy market that's predictive of forward returns over some time horizon.
 
@@ -39,6 +59,19 @@ RNNs have been successfully applied to various tasks that require mapping one or
 
 
 ## Transformers:
+
+In terms of modeling time series data which are sequential in nature, as one can imagine, researchers have come up with models which use Recurrent Neural Networks (RNN) like LSTM or GRU, or Convolutional Networks (CNN), and more recently Transformer based methods which fit naturally to the time series forecasting setting.
+
+In this repo, we're going to leverage the vanilla Transformer presented in (Vaswani et al., 2017) for the univariate probabilistic forecasting task (i.e. predicting each time series' 1-d distribution individually). 
+
+The architecture is based on an Encoder-Decoder Transformer which is a natural choice for forecasting as it encapsulates several inductive biases nicely.
+
+To begin with, the use of an Encoder-Decoder architecture is helpful at inference time where typically for some logged data we wish to forecast some prediction steps into the future. We first, sample the next token which is a 24h of energy market time window of the $7$ hub index and pass it back into the decoder (also called "autoregressive generation"). 
+In this implementation, we use an output distribution for both the encoder and decoder and, sample from it to provide forecasts up until our desired prediction horizon. This is known as Greedy Sampling/Search, this technique will help the training step to avoid local minima but also provide uncertainty estimates for robustness.
+
+Secondly, a Transformer helps us to train on time series data which might contain thousands of time points. It might not be feasible to input all the history of a time series at once to the model, due to the time- and memory constraints of the attention mechanism. Thus, one can consider some appropriate context window and sample this window and the subsequent prediction length sized window from the training data when constructing batches for stochastic gradient descent (SGD). The context sized window can be passed to the encoder and the prediction window to a causal-masked decoder. This means that the decoder can only look at previous time steps when learning the next value. This is referred to as "teacher forcing".
+
+In the diagram below we show how the procedure works
 
 
 
@@ -78,11 +111,7 @@ Conditional Value at Risk (CVaR) is a popular risk measure among professional in
 
 We want to place our order/trades in a conservative way, focusing on the less profitable outcomes. For high values of $\alpha$ it ignores the most profitable but unlikely possibilities, while for small values of $\alpha$ it focuses on the worst losses. In our startegy we consider $\alpha = 5\%$.
 
-
-
-See our `getting started tutorial <https://www.zipline.io/beginner-tutorial>`_.
-
-The following code implements a simple dual moving average algorithm.
+The following code implements the convex optimization based on cVaR.
 
 .. code-block:: python
 
@@ -113,35 +142,27 @@ The following code implements a simple dual moving average algorithm.
 
         return weights1.value.round(4).ravel(), bid_return, weights2.value.round(4).ravel(), offer_return, problem.value
 
+## The best strtegy for both Models:
+
+To ensure that our startegy is robust we apply a regularization technique as shown above in the code snippet, we choose a range of 
+gamma that represent the upper bound regularizer based on the L1 and L2 norm. We pick the one that:
+
+1- Ensure a better diversification of our portfolio (Risk diversification)
+
+2- Ensure to achieve the maximum return under the underlying constraint.
+
+In the plot below we see that our strategy respects all constraints, we note that the return are heavy tails which is common in financial data.
+
+## Limitation of the method
 
 
-You have to create your own environement and install dependencies with requirements.txt file.
+- We should probably add (or just keep the default) 'slippage' model for limit orders. Slippage not only refers to the calculation of a realistic price but also a realistic volume
 
-.. code:: bash
+- The slippage method also evaluates if your order is simply too big: you can't trade more than market's volume, and generally you can't expect to trade more than a fraction of the volume. 
 
-    $ zipline ingest
-    $ zipline run -f dual_moving_average.py --start 2014-1-1 --end 2018-1-1 -o dma.pickle --no-benchmark
 
-This will download asset pricing data data sourced from Quandl, and stream it through the algorithm over the specified time range.
-Then, the resulting performance DataFrame is saved in ``dma.pickle``, which you can load and analyze from within Python.
 
-You can find other examples in the ``zipline/examples`` directory.
 
-Questions?
-==========
-
-If you find a bug, feel free to `open an issue <https://github.com/quantopian/zipline/issues/new>`_ and fill out the issue template.
-
-Contributing
-============
-
-All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. Details on how to set up a development environment can be found in our `development guidelines <https://www.zipline.io/development-guidelines>`_.
-
-If you are looking to start working with the Zipline codebase, navigate to the GitHub `issues` tab and start looking through interesting issues. Sometimes there are issues labeled as `Beginner Friendly <https://github.com/quantopian/zipline/issues?q=is%3Aissue+is%3Aopen+label%3A%22Beginner+Friendly%22>`_ or `Help Wanted <https://github.com/quantopian/zipline/issues?q=is%3Aissue+is%3Aopen+label%3A%22Help+Wanted%22>`_.
-
-Feel free to ask questions on the `mailing list <https://groups.google.com/forum/#!forum/zipline>`_ or on `Gitter <https://gitter.im/quantopian/zipline>`_.
-
-.. note::
 
 References:
 
