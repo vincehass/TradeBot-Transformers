@@ -153,6 +153,11 @@ gamma that represent the upper bound regularizer based on the L1 and L2 norm. We
 
 In the plot below we see that our strategy respects all constraints, we note that the return are heavy tails which is common in financial data.
 
+
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/RNN_heatmap.png)![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/TransformersHeatmap.png)
+
+
+
 ## Limitation of the method
 
 
