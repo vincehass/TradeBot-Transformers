@@ -86,7 +86,7 @@ Secondly, a Transformer helps us to train on time series data which might contai
 In the diagram below we show how the procedure works
 
 
-![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/architecture.png)
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/attention_mech.png)
 
 
 
