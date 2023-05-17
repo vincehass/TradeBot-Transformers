@@ -148,7 +148,7 @@ The following code implements the convex optimization based on cVaR.
 
         return weights1.value.round(4).ravel(), bid_return, weights2.value.round(4).ravel(), offer_return, problem.value
 ```
-## The best strtegy for both Models:
+## The best strategy:
 
 To ensure that our startegy is robust we apply a regularization technique as shown above in the code snippet, we choose a range of 
 gamma that represent the upper bound regularizer based on the L1 and L2 norm. We pick the one that:
