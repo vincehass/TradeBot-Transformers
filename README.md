@@ -66,7 +66,11 @@ In this repo, we're going to leverage the vanilla Transformer presented in (Vasw
 
 The architecture is based on an Encoder-Decoder Transformer which is a natural choice for forecasting as it encapsulates several inductive biases nicely.
 
-To begin with, the use of an Encoder-Decoder architecture is helpful at inference time where typically for some logged data we wish to forecast some prediction steps into the future. We first, sample the next token which is a 24h of energy market time window of the $7$ hub index and pass it back into the decoder (also called "autoregressive generation"). 
+To begin with, the use of an Encoder-Decoder architecture is helpful at inference time where typically for some data we wish to forecast some prediction steps into the future using attention mechanism as shown in the figure below.
+
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/attention.png)
+
+ We first, sample the next token which is a 24h of energy market time window of the $7$ hub index and pass it back into the decoder (also called "autoregressive generation"). 
 In this implementation, we use an output distribution for both the encoder and decoder and, sample from it to provide forecasts up until our desired prediction horizon. This is known as Greedy Sampling/Search, this technique will help the training step to avoid local minima but also provide uncertainty estimates for robustness.
 
 Secondly, a Transformer helps us to train on time series data which might contain thousands of time points. It might not be feasible to input all the history of a time series at once to the model, due to the time- and memory constraints of the attention mechanism. Thus, one can consider some appropriate context window and sample this window and the subsequent prediction length sized window from the training data when constructing batches for stochastic gradient descent (SGD). The context sized window can be passed to the encoder and the prediction window to a causal-masked decoder. This means that the decoder can only look at previous time steps when learning the next value. This is referred to as "teacher forcing".
@@ -113,9 +117,7 @@ We want to place our order/trades in a conservative way, focusing on the less pr
 
 The following code implements the convex optimization based on cVaR.
 
-.. code-block:: python
-
-    pygments_style = 'sphinx'
+```python
 
     def maximize_trade_constrain_downside(self,bid_price, offer_price, da_validate, rt_validate, percentile, max_loss, gamma):
 
@@ -141,7 +143,7 @@ The following code implements the convex optimization based on cVaR.
         problem.solve()
 
         return weights1.value.round(4).ravel(), bid_return, weights2.value.round(4).ravel(), offer_return, problem.value
-
+```
 ## The best strtegy for both Models:
 
 To ensure that our startegy is robust we apply a regularization technique as shown above in the code snippet, we choose a range of 
@@ -154,7 +156,9 @@ gamma that represent the upper bound regularizer based on the L1 and L2 norm. We
 In the plot below we see that our strategy respects all constraints, we note that the return are heavy tails which is common in financial data.
 
 
-![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/RNN_heatmap.png)![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/TransformersHeatmap.png)
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/RNN_heatmap.png)
+
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/TransformersHeatmap.png)
 
 
 
