@@ -110,7 +110,7 @@ $\min(hr(\textbf{v}_i^l, p_i^l, v_i^s, p_i^s,da_i, rt_i))\geq -1000$ for all $i$
 
 where $\textbf{p}^l, \textbf{v}^l, \textbf{p}^s, \textbf{v}^s=f(\textbf{x})$,
 
-$v_{ij}^\leq 0,v_{ij}^s>=0, p_{ij}^l  \geq p_{ij}^s$  for all $i,j$
+$v_{ij} \geq 0, v_{ij} \geq 0, p_{ij}  \geq p_{ij}^s$  for all $i,j$
 
   
 ## The Startegy : Expected shortfall /CVaR
