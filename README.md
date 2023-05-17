@@ -40,9 +40,7 @@ For this task, our goal is:
 
 2- Translating our signal into an algorithm that can turn a profit while also managing risk exposures, in this case is minimizing the downturn loss, or simply minimizing a constraint.
 
-Traditionally in quantitative finance, the solution to the problem of maximizing returns while constraining risk has been to employ some form of Portfolio Optimization, 
-
-but performing sophisticated optimizations is challenging on today's market.
+Traditionally in quantitative finance, the solution to the problem of maximizing returns while constraining risk has been to employ some form of Portfolio Optimization, but performing sophisticated optimizations is challenging on today's market.
 
 
 ## Identifying a Model Signal : 
@@ -53,13 +51,13 @@ and hence the signals that aim to produce such uncorrelated returns are also cal
 
 ## Recurrent Neural network (RNN)
 
-We first adopt an RNN model that predicts a day-ahead energy prices known as ``da``, in fact the trader is faced upon two information:
+We first adopt an RNN model that predicts a day-ahead energy prices ``da``based real time prices``rt``, in fact the trader is faced on two information:
 
 1- the current energy prices
 
-2- a-one-day ahead estimated prices defined by regulators, this price will let the agent to place his maximum long (buy) prices known as bid and his minimum short (offer) prices that he wants to place.  
+2- a-one-day ahead estimated prices defined by regulators, this price will let the agent to determine the maximum price (long) known as bid and the minimum prices (short) that he is willing to place.  
 
-Since information differ from an agent to other, the bid and offer fluctuate. Besides agent's descisions there is many other factors that make prices fluctuate (quantity/price that a particular agent is forced to accept, liquidiy of the market, etc.)
+Since information differ from an agent to another, the bid and offer fluctuate with respect to market place (Hub node). Besides agent's descisions, there is many other factors that make prices fluctuate (quantity/price that a particular agent is forced to accept, liquidiy of the market, etc.)
 
 In the first naive model, we consider an RNN, the major innovation of RNN is that each prediction output is a function of both previous output and new data. 
 
@@ -68,9 +66,9 @@ RNNs have been successfully applied to various tasks that require mapping one or
 
 ## Transformers:
 
-In terms of modeling time series data which are sequential in nature, as one can imagine, researchers have come up with models which use Recurrent Neural Networks (RNN) like LSTM or GRU, or Convolutional Networks (CNN), and more recently Transformer based methods which fit naturally to the time series forecasting setting.
+In a second phase, we want to incorporate correlated market information to our model which is considered as causal effect on prices fluctuation. In terms of modeling time series data which are sequential in nature, as one can imagine, researchers have come up with models which use Recurrent Neural Networks (RNN) as discussed earlier like LSTM or GRU, and more recently Transformer based methods which fit naturally to the time series forecasting setting.
 
-In this repo, we're going to leverage the vanilla Transformer presented in (Vaswani et al., 2017) for the univariate probabilistic forecasting task (i.e. predicting each time series' 1-d distribution individually). 
+In this repo, we're going to leverage the vanilla Transformer as presented in [Attention Is All You Need](https://arxiv.org/pdf/1706.03762.pdf).
 
 The architecture is based on an Encoder-Decoder Transformer which is a natural choice for forecasting as it encapsulates several inductive biases nicely.
 
@@ -90,7 +88,7 @@ In the diagram below we show how the procedure works
 
 
 
-## The Optimization Problem:
+## The Optimization Problem: (draft)
 
 
 We consider the energy market over a short time period e.g 24hours and we want to predict the next 24 hours. We assumpe we have some amount of money to invest in any of $n$ different node energy market for every hour $i$. 
@@ -159,8 +157,15 @@ gamma that represent the upper bound regularizer based on the L1 and L2 norm. We
 
 2- Ensure to achieve the maximum return under the underlying constraint.
 
+The best model is teh one that not only exhibits the maximum return but also satisfies the constraint or the downturn loss. For both model we retain the model with $\gamma = 0.8$ and L2-norm regularizer.
+
 In the plot below we see that our strategy respects all constraints, we note that the return are heavy tails which is common in financial data.
 
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/RNN_cvar.png)
+
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/TransformersCvar.png)
+
+We can display the trade combination, for both models the portfolio is well diversified.
 
 ![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/RNN_heatmap.png)
 
