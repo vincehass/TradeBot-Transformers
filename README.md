@@ -50,7 +50,7 @@ Traditionally in quantitative finance, the solution to the problem of maximizing
 ## Identifying a Model Signal : 
 
 Algorithmic trading strategies are driven by signals that indicate when to buy or sell assets to generate superior returns relative to 
-a benchmark such as an index. The portion of an asset's return that is not explained by exposure to this benchmark is called alpha, 
+a benchmark such as an index. The portion of an asset's return that is not explained by exposure to this benchmark is called ``alpha``, 
 and hence the signals that aim to produce such uncorrelated returns are also called alpha factors.
 
 ## Recurrent Neural network (RNN)
@@ -80,10 +80,18 @@ To begin with, the use of an Encoder-Decoder architecture is helpful at inferenc
 
 ![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/attention.png)
 
- We first, sample the next token which is a 24h of energy market time window of the $7$ hub index and pass it back into the decoder (also called "autoregressive generation"). 
+ We first, sample the next token which is a $24$-h of energy market time window of the $7$ hub index and pass it back into the decoder (also called ``autoregressive generation``). 
 In this implementation, we use an output distribution for both the encoder and decoder and, sample from it to provide forecasts up until our desired prediction horizon. This is known as Greedy Sampling/Search, this technique will help the training step to avoid local minima but also provide uncertainty estimates for robustness.
 
-Secondly, a Transformer helps us to train on time series data which might contain thousands of time points. It might not be feasible to input all the history of a time series at once to the model, due to the time- and memory constraints of the attention mechanism. Thus, one can consider some appropriate context window and sample this window and the subsequent prediction length sized window from the training data when constructing batches for stochastic gradient descent (SGD). The context sized window can be passed to the encoder and the prediction window to a causal-masked decoder. This means that the decoder can only look at previous time steps when learning the next value. This is referred to as "teacher forcing".
+
+
+
+
+Secondly, a Transformer helps us to train on time series data which might contain thousands of time points. It might not be feasible to input all the history of a time series at once to the model, due to the time- and memory constraints of the attention mechanism. In the gigure below, thus, one can consider some appropriate context window and sample this window and the subsequent prediction length sized window from the training data when constructing batches for stochastic gradient descent (SGD). The context sized window can be passed to the encoder and the prediction window to a causal-masked decoder. This means that the decoder can only look at previous time steps when learning the next value. This is referred to as "teacher forcing".
+
+
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/sliding_window3.png)
+
 
 In the diagram below we show how the procedure works
 
