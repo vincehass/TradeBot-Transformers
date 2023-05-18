@@ -103,12 +103,9 @@ In the diagram below we show how the procedure works
 ## The Optimization Problem: (draft)
 
 
-We consider the energy market over a short time period e.g 24hours and we want to predict the next 24 hours. We assumpe we have some amount of money to invest in any of $n$ different node energy market for every hour $i$. 
+We consider the energy market over a short time period e.g 24hours and we want to predict the next 24 hours. We assumpe we have some amount of money to invest in any of $n$ different node energy market for every hour $i$. The optimization solution will return $v_{long}$ and $v_{short}$ combination trades per node which coresspond to (volume to long and volume to short) according to the current information (a current price $rt$ and a-day-ahead market price $da$).
 
-
-with $m^{2}$  trades per node which coresspond to (volume to short, volume to long) according to the current information (a current price $rt$ and a-day-ahead market price $da$).
-
-The return matrix is $R$, where $R_{ij}$ is the return in dollars for the $i$-th hourly index and the $j$-th hub index. We are allowed to design a set of combination trades that coresspond to the volume to long and the volume to short for every hub index $j$. The combination of trade per dollar bet under is a subject to a constraint $C \in m \times n$ , for $m$ quantity to short and $n$ quantity to short where $C\geq -1000$. A betting strategy is the matrix of trades $W_{nm}^{j} \in \mathbb{R}_+$, at time index $h$ that maximize the return $R_{ij}$.
+The return matrix is $R$, where $R_{ij}$ is the return in dollars for the $i$-th hourly index and the $j$-th hub index. After the optimization solution we are able to retrieve the return based on the set of trades combination that coresspond to the volume to long and the volume to short for every hub index $j$. The combination of trade per dollar bet under is a subject to a constraint $C , for $v_{short}$ a $v_{long}$ with $C\geq -1000$. A betting strategy is, at time index $h$ for all node that maximize the return $R_{ij}$.
 
 We say that there is an arbitrage opportunity in this event if there exists a betting strategy $W$ that is guaranteed to have nonnegative return for each node subject to constraint C. We can check whether there exists an arbitrage opportunity by solving the convex optimization problem.
 
