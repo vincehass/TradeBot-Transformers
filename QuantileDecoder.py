@@ -6,7 +6,7 @@ from utils import _easy_mlp, _split_series_time_dims, _merge_series_time_dims
 
 class QuantileDecoder(nn.Module):
     """
-    A decoder which forecast using a distribution built from a copula and marginal distributions.
+    A decoder which forecast using a non parametric distribution.
     """
 
     def __init__(
@@ -14,10 +14,7 @@ class QuantileDecoder(nn.Module):
         input_dim: int,
         min_u: float = 0.0,
         max_u: float = 1.0,
-        skip_sampling_marginal: bool = False,
-        trivial_quantile: Optional[Dict[str, Any]] = None,
         attentional_quantile: Optional[Dict[str, Any]] = None,
-        #dsf_marginal: Optional[Dict[str, Any]] = None,
     ):
         """
         Parameters:
@@ -27,32 +24,13 @@ class QuantileDecoder(nn.Module):
         min_u: float, default to 0.0
         max_u: float, default to 1.0
             The values sampled from the copula will be scaled from [0, 1] to [min_u, max_u] before being sent to the marginal.
-        skip_sampling_marginal: bool, default to False
-            If set to True, then the output from the copula will not be transformed using the marginal during sampling.
-            Does not impact the other transformations from observed values to the [0, 1] range.
-        trivial_copula: Dict[str, Any], default to None
-            If set to a non-None value, uses a TrivialCopula.
-            The options sent to the TrivialCopula is content of this dictionary.
-        attentional_copula: Dict[str, Any], default to None
-            If set to a non-None value, uses a AttentionalCopula.
-            The options sent to the AttentionalCopula is content of this dictionary.
-        dsf_marginal: Dict[str, Any], default to None
-            If set to a non-None value, uses a DSFMarginal.
-            The options sent to the DSFMarginal is content of this dictionary.
         """
         super().__init__()
 
-        assert (trivial_quantile is not None) + (
-            attentional_quantile is not None
-        ) == 1, "Must select exactly one type of decoder"
-        #assert (dsf_marginal is not None) == 1, "Must select exactly one type of marginal"
-
+        
         self.min_u = min_u
         self.max_u = max_u
-        self.skip_sampling_marginal = skip_sampling_marginal
-
-        if trivial_quantile is not None:
-            self.copula = TrivialQuantile(**trivial_quantile)
+        
         if attentional_quantile is not None:
             self.quantile = AttentionalQuantile(input_dim=input_dim, **attentional_quantile)
 
@@ -92,19 +70,15 @@ class QuantileDecoder(nn.Module):
         hist_true_x = true_value[:, mask]
         pred_true_x = true_value[:, ~mask]
 
-        # Transform to [0,1] using the marginals
-        # hist_true_u = self.marginal.forward_no_logdet(hist_encoded, hist_true_x)
-        # pred_true_u, marginal_logdet = self.marginal.forward_logdet(pred_encoded, pred_true_x)
-
         quantile_loss = self.quantile.loss(
             hist_encoded=hist_encoded,
-            hist_true_u=hist_true_x,#hist_true_u,
+            hist_true_u=hist_true_x,
             pred_encoded=pred_encoded,
-            pred_true_u=pred_true_x#pred_true_u,
+            pred_true_u=pred_true_x
         )
 
         # Loss = negative log likelihood
-        return quantile_loss #- marginal_logdet
+        return quantile_loss 
 
     def sample(
         self, num_samples: int, encoded: torch.Tensor, mask: torch.BoolTensor, true_value: torch.Tensor
@@ -144,8 +118,7 @@ class QuantileDecoder(nn.Module):
         pred_encoded = encoded[:, ~mask, :]
         hist_true_x = true_value[:, mask]
 
-        # Transform to [0,1] using the marginals
-        #hist_true_u = self.marginal.forward_no_logdet(hist_encoded, hist_true_x)
+        
         hist_true_u = hist_true_x
 
 
@@ -155,13 +128,7 @@ class QuantileDecoder(nn.Module):
             hist_true_u=hist_true_u,
             pred_encoded=pred_encoded,
         )
-        # if not self.skip_sampling_marginal:
-        #     # Transform away from [0,1] using the marginals
-        #     pred_samples = self.min_u + (self.max_u - self.min_u) * pred_samples
-        #     pred_samples = self.marginal.inverse(
-        #         pred_encoded,
-        #         pred_samples,
-        #     )
+        
 
         samples = torch.zeros(
             target_shape[0], target_shape[1] * target_shape[2], target_shape[3], device=encoded.device
@@ -596,76 +563,3 @@ class AttentionalQuantile(nn.Module):
         return samples
 
 
-class TrivialQuantile(nn.Module):
-    """
-    The trivial qunatile where all variables are independent.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    def loss(
-        self,
-        hist_encoded: torch.Tensor,
-        hist_true_u: torch.Tensor,
-        pred_encoded: torch.Tensor,
-        pred_true_u: torch.Tensor,
-    ) -> torch.Tensor:
-        """
-        Compute the loss function of the quantile portion of the decoder.
-
-        Parameters:
-        -----------
-        hist_encoded: Tensor [batch, series * time steps, embedding dimension]
-            A tensor containing an embedding for each variable and time step that does not have to be forecasted.
-            The series and time steps dimensions are merged.
-        hist_true_u: Tensor [batch, series * time steps]
-            A tensor containing the true value for the values that do not have to be forecasted, transformed by the marginal distribution into U(0,1) values.
-            The series and time steps dimensions are merged.
-        pred_encoded: Tensor [batch, series * time steps, embedding dimension]
-            A tensor containing an embedding for each variable and time step that does have to be forecasted.
-            The series and time steps dimensions are merged.
-        pred_true_u: Tensor [batch, series * time steps]
-            A tensor containing the true value for the values to be forecasted, transformed by the marginal distribution into U(0,1) values.
-            The series and time steps dimensions are merged.
-
-        Returns:
-        --------
-        embedding: torch.Tensor [batch]
-            The loss function, equal to the negative log likelihood of the copula.
-            This is always equal to zero.
-        """
-        batch_size = hist_encoded.shape[0]
-        device = hist_encoded.device
-        # Trivially, the probability of all u is equal to 1 if in the unit cube (which it should always be by construction)
-        return torch.zeros(batch_size, device=device)
-
-    def sample(
-        self, num_samples: int, hist_encoded: torch.Tensor, hist_true_u: torch.Tensor, pred_encoded: torch.Tensor
-    ) -> torch.Tensor:
-        """
-        Generate the given number of samples from the trivial copula.
-
-        Parameters:
-        -----------
-        num_samples: int
-            How many samples to generate, must be >= 1.
-        hist_encoded: Tensor [batch, series * time steps, embedding dimension]
-            A tensor containing an embedding for each variable and time step that does not have to be forecasted.
-            The series and time steps dimensions are merged.
-        hist_true_u: Tensor [batch, series * time steps]
-            A tensor containing the true value for the values that do not have to be forecasted, transformed by the marginal distribution into U(0,1) values.
-            The series and time steps dimensions are merged.
-        pred_encoded: Tensor [batch, series * time steps, embedding dimension]
-            A tensor containing an embedding for each variable and time step that does have to be forecasted.
-            The series and time steps dimensions are merged.
-
-        Returns:
-        --------
-        samples: torch.Tensor [batch, series * time steps, samples]
-            Samples drawn from the trivial copula, which is equal to the multi-dimensional Uniform(0, 1) distribution.
-            The series and time steps dimensions are merged.
-        """
-        num_batches, num_variables, _ = pred_encoded.shape
-        device = pred_encoded.device
-        return torch.rand(num_batches, num_variables, num_samples, device=device)

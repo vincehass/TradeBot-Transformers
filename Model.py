@@ -47,38 +47,7 @@ class TradingBot(nn.Module):
         lookahead_window : int = 24,
        
     ):
-        """
-        Parameters:
-        -----------
-        num_series: int
-            Number of series of the data which will be sent to the model.
-        series_embedding_dim: int
-            The dimensionality of the per-series embedding.
-        input_encoder_layers: int
-            Number of layers in the MLP which encodes the input data.
-        bagging_size: Optional[int], default to None
-            If set, the loss() method will only consider a random subset of the series at each call.
-            The number of series kept is the value of this parameter.
-        input_encoding_normalization: bool, default to True
-            If true, the encoded input values (prior to the positional encoding) are scaled
-            by the square root of their dimensionality.
-        data_normalization: str ["", "none", "standardization"], default to "series"
-            How to normalize the input values before sending them to the model.
-        loss_normalization: str ["", "none", "series", "timesteps", "both"], default to "series"
-            Scale the loss function by the number of series, timesteps, or both.
-        positional_encoding: Optional[Dict[str, Any]], default to None
-            If set to a non-None value, uses a PositionalEncoding for the time encoding.
-            The options sent to the PositionalEncoding is content of this dictionary.
-        encoder: Optional[Dict[str, Any]], default to None
-            If set to a non-None value, uses a Encoder as the encoder.
-            The options sent to the Encoder is content of this dictionary.
-        temporal_encoder: Optional[Dict[str, Any]], default to None
-            If set to a non-None value, uses a TemporalEncoder as the encoder.
-            The options sent to the TemporalEncoder is content of this dictionary.
-        model_decoder: Optional[Dict[str, Any]], default to None
-            If set to a non-None value, uses a CopulaDecoder as the decoder.
-            The options sent to the CopulaDecoder is content of this dictionary.
-        """
+        
         super().__init__()
 
         self.num_series = num_series
@@ -109,8 +78,7 @@ class TradingBot(nn.Module):
         
         if encoder is not None:
             self.encoder = Encoder(**encoder)
-        # if temporal_encoder is not None:
-        #     self.encoder = TemporalEncoder(**temporal_encoder)
+   
         
         
         if rnn_decoder is not None:
@@ -153,7 +121,7 @@ class TradingBot(nn.Module):
         Returns:
         --------
         loss: torch.Tensor []
-            The loss function of TACTiS, with lower values being better. Averaged over batches.
+            The loss function of the model, with lower values being better. Averaged over batches.
         """
         num_batches = hist_value.shape[0]
         num_series = hist_value.shape[1]
@@ -206,14 +174,7 @@ class TradingBot(nn.Module):
             if self.input_encoding_normalization:
                 encoded = encoded * self.encoder.embedding_dim**0.5
             encoded = self.encoder.forward(encoded)
-        # if self.input_encoding_normalization:
-        #     encoded = encoded * self.encoder.embedding_dim**0.5
-
-        # Add the time encoding here after the input encoding to be compatible with how positional encoding is used.
-        # Adjustments may be required for other ways to encode time.
-        # if self.time_encoding:
-        #     timesteps = torch.cat([hist_time, pred_time], dim=2)
-        #     encoded = self.time_encoding(encoded, timesteps.to(int))
+ 
 
         
 
@@ -238,43 +199,7 @@ class TradingBot(nn.Module):
         if self.loss_normalization in {"timesteps", "both"}:
             loss = loss / num_pred_timesteps
         return loss.mean()
-        # if self.quantile_decoder is not None:
-        #     encoded = self.input_encoder(encoded)
-        #     encoded = self.encoder.forward(encoded)
-        # else:
-        #     encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
 
-
-
-        # Add the time encoding here after the input encoding to be compatible with how positional encoding is used.
-        # Adjustments may be required for other ways to encode time.
-        # if self.time_encoding:
-        #     timesteps = torch.cat([hist_time, pred_time], dim=2)
-        #     encoded = self.time_encoding(encoded, timesteps.to(int))
-
-        
-
-        # mask = torch.cat(
-        #     [
-        #         torch.ones(num_batches, num_series, num_hist_timesteps, dtype=bool, device=device),
-        #         torch.zeros(num_batches, num_series, num_pred_timesteps, dtype=bool, device=device),
-        #     ],
-        #     dim=2,
-        # )
-        # true_value = torch.cat(
-        #     [
-        #         hist_value,
-        #         pred_value,
-        #     ],
-        #     dim=2,
-        # )
-
-        # loss = self.decoder.loss(encoded, mask, true_value)
-        # if self.loss_normalization in {"series", "both"}:
-        #     loss = loss / num_series
-        # if self.loss_normalization in {"timesteps", "both"}:
-        #     loss = loss / num_pred_timesteps
-        # return loss.mean()
     
     
     
@@ -388,15 +313,6 @@ class TradingBot(nn.Module):
 
         
         
-        # if self.quantile_decoder is not None:
-        #     encoded = self.input_encoder(encoded)
-        #     if self.input_encoding_normalization:
-        #         encoded *= self.encoder.embedding_dim**0.5
-        #         encoded = self.encoder.forward(encoded)
-        # else:
-        #     encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
-        
-        
         encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
         if self.quantile_decoder is not None:
             encoded = self.input_encoder(encoded)
@@ -404,19 +320,6 @@ class TradingBot(nn.Module):
                 encoded = encoded * self.encoder.embedding_dim**0.5
             encoded = self.encoder.forward(encoded)
         
-        
-        # encoded = torch.cat([hist_encoded, pred_encoded], dim=2)
-        # encoded = self.input_encoder(encoded)
-        # if self.input_encoding_normalization:
-        #     encoded *= self.encoder.embedding_dim**0.5
-
-        # Add the time encoding here after the input encoding to be compatible with how positional encoding is used.
-        # Adjustments may be required for other ways to encode time.
-        # if self.time_encoding:
-        #     timesteps = torch.cat([hist_time, pred_time], dim=2)
-        #     encoded = self.time_encoding(encoded, timesteps.to(int))
-
-        #encoded = self.encoder.forward(encoded)
 
         mask = torch.cat(
             [

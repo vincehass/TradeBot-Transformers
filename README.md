@@ -180,19 +180,15 @@ We can display the trade combination, for both models the portfolio is well dive
 
 ![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/RNN_heatmap.png)
 
-![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/TransformersHeatmap.png)
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/TransformersHeatmap_valid.png)
 
 
 
 ## Limitation of the method
 
-
-- We should probably add a 'slippage' model for limit orders. Slippage not only refers to the calculation of a realistic price but also a realistic volume
-
-- The slippage method also evaluates if our order is simply too big: because we can't trade more than market's volume.
-
 - We limit ourself to market price conditions but we could have used feature data such as climate conditions, however we assume that all external information have been captured by the price fluctuations in the market.
 
+- In the general trading setting, we add a ``slippage`` model for limit orders. Slippage not only refers to the calculation of a realistic price but also a realistic volume, because with slippage, the model evaluates if the order is too big, hence it must be rejected since we can't trade more than market's volume.
 
 ===========================================================================
 
@@ -268,7 +264,7 @@ We can alternatively look at Stable PCP which is intuitively more practical sinc
 Unroll the daily values to plot the timeseries. Note the spikes we wish to separate.
 
 
-```
+```python
 data = pd.read_csv("Question1.csv", index_col=0, parse_dates=True)
 
 timeseries = data.stack()
@@ -284,9 +280,6 @@ rpca.train_pca(M)
 L = rpca.get_low_rank_matrix_L()
 S = rpca.get_sparse_matrix_S()
 
-
 ```
 Here `L` and `S` are desired low rank matrix and sparse matrix that contains the spike prices.
 
-### Contributions
-Feel free to fork and develop this project. It is under MIT license.

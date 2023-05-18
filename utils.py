@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader, Dataset, Sampler
 from typing import List
 import pandas as pd
 from datetime import datetime
-data = pd.read_csv("Question2.csv", index_col=0, header=[0,1], parse_dates=True)
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -185,66 +184,3 @@ def worst_loss(results):
 def best_loss(results):
     return max(results.sum(axis=1))
 
-
-class TimeseriesDataset():
-    """
-    A Dataset for a multivariate time series.
-    It will split the data into historical and prediction values,
-    and assign time values to each time step.
-    """
-
-    def __init__(self, data):
-        """
-        Parameters:
-        -----------
-        data: List[np.array]
-            The data for the dataset, as a list of aligned 1d series.
-        hist_length: int
-            When doing the forecast, how many time steps will be available.
-        pred_length: int
-            When doing the forecast, the length of said forecast.
-        """
-        self.data = data
-
-        self.da = self.data["da"]
-        self.rt = self.data["rt"]
-        self.X = self.data["X"]
-
-        # example of prices with a two day lag if you wish to use timeseries as features (ie RNN, CNN, ARIMA, etc...)
-        self.shifted_da = self.da.shift(freq="48H")
-        self.shifted_rt = self.rt.shift(freq="48H")
-
-        self.split = datetime(2020,8,1)
-        self.X_train = self.X.loc[:self.split]
-        self.X_validate = self.X.loc[self.split:]
-        self.da_train = self.da.loc[:self.split]
-        self.da_validate = self.da.loc[self.split:]
-        self.rt_train = self.rt.loc[self.split:]
-        self.rt_validate = self.rt.loc[:self.split]
-
-
-    def features_train(self):
-        self.X_train = self.X.loc[:self.split]
-        return self.X_train
-        
-    def features_validate(self):
-        self.X_validate = self.X.loc[self.split:]
-        return self.X_validate
-        
-    def dahead_train(self):
-        self.da_train = self.da.loc[:self.split]
-        return self.da_train
-    
-    def dahead_validate(self):
-        self.da_validate = self.da.loc[self.split:]
-        return self.da_train
-              
-    def realt_train(self):
-        self.rt_train = self.rt.loc[self.split:]
-        return self.rt_train    
-
-    def realt_validate(self):
-        self.rt_validate = self.rt.loc[:self.split]
-        return self.rt_train  
-
-# data_ts = TimeseriesDataset(data)
