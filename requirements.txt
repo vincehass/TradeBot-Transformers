@@ -1,7 +1,7 @@
-pytorch-lightning
 scikit-learn
 numpy
 matplotlib
 pandas  
 jupyter
 cvxpy
+torch

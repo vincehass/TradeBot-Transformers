@@ -126,7 +126,7 @@ $v_{ij} \geq 0, v_{ij} \geq 0, p_{ij}^l  \geq p_{ij}^s$  for all $i,j$
 
 Conditional Value at Risk (CVaR) is a popular risk measure among professional investors used to quantify the extent of potential big losses. The metric is computed as an average of the  $\alpha\%$ worst case scenarios over some time horizon. 
 
-We want to place our order/trades in a conservative way, focusing on the less profitable outcomes. For high values of $\alpha$ it ignores the most profitable but unlikely possibilities, while for small values of $\alpha$ it focuses on the worst losses. In our startegy we consider $\alpha = 5\%$.
+We want to place our order/trades in a conservative way, focusing on the less profitable outcomes. For high values of $\alpha$ it ignores the most profitable but unlikely possibilities, while for small values of $\alpha$ it focuses on the worst losses. In our startegy we consider $\alpha = 5%$.
 
 The following code implements the convex optimization based on cVaR.
 
@@ -189,10 +189,10 @@ We can display the trade combination, for both models the portfolio is well dive
 
 - The slippage method also evaluates if our order is simply too big: because we can't trade more than market's volume.
 
-- We limit ourself to market price conditions but we could have used feature data such as climate conditions.
+- We limit ourself to market price conditions but we could have used feature data such as climate conditions, however we assume that all external information have been captured by the price fluctuations in the market.
 
 
-===================================================================
+===========================================================================
 
 
 
