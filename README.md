@@ -100,7 +100,7 @@ In the diagram below we show how the procedure works
 
 
 
-## The Optimization Problem: (draft)
+## The Optimization Problem: 
 
 
 We consider the energy market over a short time period e.g 24hours and we want to predict the next 24 hours. We assumpe we have some amount of money to invest in any of $n$ different node energy market for every hour $i$. The optimization solution will return $v_{long}$ and $v_{short}$ combination trades per node which coresspond to (volume to long and volume to short) according to the current information (a current price $rt$ and a-day-ahead market price $da$).
