@@ -47,7 +47,7 @@ For this task, our goal is:
 Traditionally in quantitative finance, the solution to the problem of maximizing returns while constraining risk has been to employ some form of Portfolio Optimization, but performing sophisticated optimizations is challenging on today's market.
 
 
-## Identifying a Model Signal : 
+## Identifying the Model Signal : 
 
 Algorithmic trading strategies are driven by signals that indicate when to buy or sell assets to generate superior returns relative to 
 a benchmark such as an index. The portion of an asset's return that is not explained by exposure to this benchmark is called ``alpha``, 
@@ -68,7 +68,7 @@ In the first naive model, we consider an RNN, the major innovation of RNN is tha
 RNNs have been successfully applied to various tasks that require mapping one or more input sequences to one or more output sequences and are particularly well suited to time series forecasting. 
 
 
-## Transformers:
+## Transformers (Self attention mixed with time):
 
 In a second phase, we want to incorporate correlated market information to our model which is considered as causal effect on prices fluctuation. In terms of modeling time series data which are sequential in nature, as one can imagine, researchers have come up with models which use Recurrent Neural Networks (RNN) as discussed earlier like LSTM or GRU, and more recently Transformer based methods which fit naturally to the time series forecasting setting.
 
@@ -157,7 +157,9 @@ The following code implements the convex optimization based on cVaR.
 
         return weights1.value.round(4).ravel(), bid_return, weights2.value.round(4).ravel(), offer_return, problem.value
 ```
-## The best strategy:
+## The best strategy based on the validation dataset:
+
+See [ValidationExperiments](https://github.com/vincehass/TradeBot-Transformers/blob/main/ValidationExperiments.ipynb)
 
 To ensure that our startegy is robust we apply a regularization technique as shown above in the code snippet, we choose a range of 
 gamma that represent the upper bound regularizer based on the L1 and L2 norm. We pick the one that:
