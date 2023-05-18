@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 
 
-# Trading on Energy market with a convex optimization problem 
+# Trading on Energy market with a convex optimization problem. 
 
 We construct a TradeBot algorithm for sequential prediction based on Transformers and RNN Model, the main objectif of the model is to optimize portfolio allocation given uncertainity in the energy market.
 
