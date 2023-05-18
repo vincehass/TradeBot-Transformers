@@ -180,7 +180,7 @@ We can display the trade combination, for both models the portfolio is well dive
 
 ![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/RNN_heatmap.png)
 
-![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/TransformersHeatmap_valid.png)
+![plot](https://github.com/vincehass/TradeBot-Transformers/blob/main/TransformersHeatmap.png)
 
 
 
